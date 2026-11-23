@@ -8,6 +8,15 @@ class AudioExtractionError(RuntimeError):
     pass
 
 
+audio_temporary_directories: dict[str, tempfile.TemporaryDirectory[str]] = {}
+
+
+def cleanup_extracted_audio(audio_path: Path) -> None:
+    temporary_directory = audio_temporary_directories.pop(str(audio_path), None)
+    if temporary_directory is not None:
+        temporary_directory.cleanup()
+
+
 def extract_audio(input_path: Path) -> Path:
     ffmpeg_path = shutil.which("ffmpeg")
     if ffmpeg_path is None:
@@ -45,5 +54,5 @@ def extract_audio(input_path: Path) -> Path:
         detail = exc.stderr.strip() or "FFmpeg could not process the video."
         raise AudioExtractionError(detail) from exc
 
-    audio_path._capgen_temp_directory = temporary_directory
+    audio_temporary_directories[str(audio_path)] = temporary_directory
     return audio_path

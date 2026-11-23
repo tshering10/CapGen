@@ -6,7 +6,7 @@ from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 
-from subtitle_editor.router import documents
+from subtitle_editor.store import get_document as get_subtitle_document
 from .formats import write_ass, write_srt
 from .service import VideoRenderError, render_video
 
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/video-renderer", tags=["video-renderer"])
 
 
 def get_document(document_id: str):
-    document = documents.get(document_id)
+    document = get_subtitle_document(document_id)
     if document is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Subtitle document not found")
     return document

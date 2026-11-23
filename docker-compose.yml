@@ -1,0 +1,52 @@
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CAPGEN_JOB_STORE: redis
+      CAPGEN_DOCUMENT_STORE: redis
+      PYTHONPATH: /app
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/app/temporary_uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ["uv", "run", "celery", "-A", "jobs.celery_app.celery_app", "worker", "--loglevel=info", "--pool=solo"]
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      CAPGEN_JOB_STORE: redis
+      CAPGEN_DOCUMENT_STORE: redis
+      PYTHONPATH: /app
+    volumes:
+      - uploads:/app/temporary_uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  uploads:

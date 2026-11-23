@@ -5,7 +5,11 @@ from pathlib import Path
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 
-from .audio import AudioExtractionError, extract_audio
+from .audio import (
+    AudioExtractionError,
+    cleanup_extracted_audio,
+    extract_audio,
+)
 from .models import TranscriptionResult
 from .service import TranscriptionError, TranscriptionService
 
@@ -69,10 +73,4 @@ def transcribe_video(
         video.file.close()
         temporary_directory.cleanup()
         if audio_path is not None:
-            audio_directory = getattr(
-                audio_path,
-                "_capgen_temp_directory",
-                None,
-            )
-            if audio_directory is not None:
-                audio_directory.cleanup()
+            cleanup_extracted_audio(audio_path)

@@ -1,0 +1,6 @@
+.venv
+.git
+__pycache__
+*.pyc
+backend/.venv
+backend/temporary_uploads
