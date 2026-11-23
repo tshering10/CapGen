@@ -1,6 +1,12 @@
-def main():
-    print("Hello from backend!")
+from fastapi import FastAPI
+
+from transcription.router import router as transcription_router
 
 
-if __name__ == "__main__":
-    main()
+app = FastAPI(title="CapGen API", version="0.1.0")
+app.include_router(transcription_router)
+
+
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
